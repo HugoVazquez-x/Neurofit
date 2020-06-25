@@ -20,11 +20,11 @@ class MLNN(Minimize):
         #Force Keras to work with 'float64'
         tf.keras.backend.set_floatx('float64')
         
-        #Compute mean in std of the datasets
+        #Compute mean and std of the datasets
         mean = database.mean(axis=0)
         mean_eval = database_eval.mean(axis=0)
-        std_train = database.std(axis=0)
-        std= database_eval.std(axis=0)
+        std = database.std(axis=0)
+        std_eval= database_eval.std(axis=0)
         
         #Initialisation of parent class
         Minimize.__init__(self,Nvar, Npar1, Npar2, Nres, bornes, list_pts,mean,std)
@@ -45,9 +45,9 @@ class MLNN(Minimize):
         
         
         database -= mean
-        database /= std_train
+        database /= std
         database_eval -= mean_eval
-        database_eval /= std 
+        database_eval /= std_eval
         
         
         #Split data

@@ -99,9 +99,9 @@ for istep in range( Nstep ):
     next_line  = np.zeros( ( 1, Nvar + Npar1 + Npar2 + Nres ) )
     next_line[0,0] = x
     next_line[0,Nres:Nvar + Npar1 ] = pred[0:Npar1]
-    #paramètre supplémentaire
+    #additionnal parameters ( correction paramaters)
     next_line[0,Nvar + Npar1:Nvar + Npar1 + Npar2] = a*x
-    #résulat
+    #result
     next_line[0,Nvar + Npar1 + Npar2] = fct(x,a,b) - exp_values[j,1]
     database = np.concatenate(( database , next_line  ),axis=0)
     print("prédiction des paramètres :" ,pred)
