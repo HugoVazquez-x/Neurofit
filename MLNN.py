@@ -56,16 +56,6 @@ class MLNN(Minimize):
 #        self.exp_values[:,1] -= mean[4]
 #        self.exp_values[:,1] /= std[4]
         
-       
-        #Normalization of data
-        
-        
-        data_train -= mean
-        data_train /= std
-        data_eval -= mean
-        data_eval /= std
-        
-        
         #Split data
         self.x_train = data_train[:,:data_train.shape[1]-Nres]
         self.y_train = data_train[:,data_train.shape[1]-Nres:]
@@ -74,6 +64,13 @@ class MLNN(Minimize):
         self.x_eval = data_eval[:,:data_eval.shape[1]-Nres]
         self.y_eval = data_eval[:,data_eval.shape[1]-Nres:]
         self.y_eval = self.y_eval.reshape(self.y_eval.shape[0],)
+        
+        #Normalization of data
+        
+        self.x_train -= mean[:len(self.mean)-self.Nres]
+        self.x_train /= std[:len(self.std)-self.Nres]
+        self.x_eval -= mean[:len(self.mean)-self.Nres]
+        self.x_eval /= std[:len(self.std)-self.Nres]
         
         #Weights
         self.weights = np.ones((self.x_train.shape[0]))
@@ -135,7 +132,7 @@ class MLNN(Minimize):
         test_targets :
         weights : array of numbers that specify how much weight each sample in a batch should have in computing the total loss
         """
-        verb = 1
+        verb = 0
         #A simpler check-point strategy is to save the model weights to the same file, if and only if the validation accuracy improves
         #The best model is saved in file "bestb.h5"
         checkpoint = ModelCheckpoint( monitor='loss', filepath='weights.best.hdf5', save_best_only=True,verbose=verb)   
