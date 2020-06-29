@@ -15,19 +15,31 @@ from minimize import Minimize
 from keras.callbacks import ModelCheckpoint
 
 class MLNN(Minimize):
-    def __init__(self,database,database_eval,Nvar,Npar1,Npar2,Nres, bornes, list_pts):
+    def __init__(self,database,database_eval,Nvar,Npar1,Npar2,Nres, bornes, list_pts,exp_values,additional_param):
         
         #Force Keras to work with 'float64'
         tf.keras.backend.set_floatx('float64')
         
+        #Involve additional parmater in the database
+        aux = self.complete_dataset(database,Nvar,Npar1,additional_param)
+        data_train = np.concatenate((aux,database[:,Nvar + Npar1:]), axis = 1)
+        aux_eval = self.complete_dataset(database_eval,Nvar,Npar1,additional_param)
+        data_eval = np.concatenate((aux_eval,database_eval[:,Nvar + Npar1:]), axis = 1)
+        
         #Compute mean and std of the datasets
-        mean = database.mean(axis=0)
-        mean_eval = database_eval.mean(axis=0)
-        std = database.std(axis=0)
-        std_eval= database_eval.std(axis=0)
+        if os.path.isfile('mean.txt') and os.path.isfile('std.txt') :
+            mean = np.loadtxt(fname = "mean.txt") 
+            std = np.loadtxt(fname = "std.txt") 
+        else :
+            mean = data_train.mean(axis=0)
+            std = data_train.std(axis=0)
+            #mean_eval = data_eval.mean(axis=0)
+            #std_eval = data_eval.std(axis=0)
+            np.savetxt("mean.txt",mean,delimiter=' ')
+            np.savetxt("std.txt",std,delimiter=' ')
         
         #Initialisation of parent class
-        Minimize.__init__(self,Nvar, Npar1, Npar2, Nres, bornes, list_pts,mean,std)
+        Minimize.__init__(self,Nvar, Npar1, Npar2, Nres, bornes, list_pts,mean,std,additional_param)
         
         """
         database : data use to train the model
@@ -41,22 +53,26 @@ class MLNN(Minimize):
         
         self.model = keras.models.Sequential()
         
+        exp_values[:,1] -= mean[4]
+        exp_values[:,1] /= std[4]
+        self.exp_values = exp_values
+       
         #Normalization of data
         
         
-        database -= mean
-        database /= std
-        database_eval -= mean_eval
-        database_eval /= std_eval
+        data_train -= mean
+        data_train /= std
+        data_eval -= mean
+        data_eval /= std
         
         
         #Split data
-        self.x_train = database[:,:database.shape[1]-Nres]
-        self.y_train = database[:,database.shape[1]-Nres:]
+        self.x_train = data_train[:,:data_train.shape[1]-Nres]
+        self.y_train = data_train[:,data_train.shape[1]-Nres:]
         self.y_train = self.y_train.reshape(self.y_train.shape[0],)
         
-        self.x_eval = database_eval[:,:database_eval.shape[1]-Nres]
-        self.y_eval = database_eval[:,database_eval.shape[1]-Nres:]
+        self.x_eval = data_eval[:,:data_eval.shape[1]-Nres]
+        self.y_eval = data_eval[:,data_eval.shape[1]-Nres:]
         self.y_eval = self.y_eval.reshape(self.y_eval.shape[0],)
         
         #Weights
@@ -65,7 +81,20 @@ class MLNN(Minimize):
         #ModelHistory in order to draw chart
         self.trainModel_history = []
         
-
+    def complete_dataset(self,dataset,Nvar,Npar1,additional_param):
+        T = []
+        for i in range(Nvar + Npar1):
+            T.append(dataset[:,i])
+            
+        D = additional_param(T)
+        param_more  = np.zeros((dataset.shape[0],D[0]))
+        
+        for  i in range(D[0]):
+            param_more[:,i] = D[i+1]
+            
+        dataset = np.concatenate((dataset[:,:Nvar+Npar1],param_more),axis=1)
+        
+        return dataset
         
     def build_model(self,num_hidden_layers,architecture,act_func,output_class=1,optimizers = 'adam',losses = 'mse',metrics = 'mae'):
         
@@ -89,8 +118,6 @@ class MLNN(Minimize):
             
         #Output Layer 
         self.model.add(keras.layers.Dense(output_class))
-#        if os.path.isfile('weights.best.hdf5'):
-#            self.model.load_weights("weights.best.hdf5")
         self.model.compile(optimizer= optimizers, loss = losses, metrics=[metrics])
         
         
@@ -126,8 +153,14 @@ class MLNN(Minimize):
             
             self.trainModel_history.append(seqM)
         print("----------End of model Training---------")    
-        #self.model.save('model.h5')    
-        #print("----------The model has been saved in 'model.h5'-------------")
+        
+        print("----------Loading best weights----------")
+        self.model.load_weights("weights.best.hdf5")
+        
+        print("----------Saving model as 'last _model.h5'--------")
+        self.model.save('last_model.h5', include_optimizer = True)
+        
+        print("----------The model has been saved in 'model.h5'-------------")
         
     def training_view(self,successive_fit_numb):
         

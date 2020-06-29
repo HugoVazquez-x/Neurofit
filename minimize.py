@@ -9,7 +9,7 @@ import numpy as np
 from scipy.optimize import least_squares
 
 class Minimize():
-    def __init__(self,Nvar, Npar1, Npar2, Nres, bornes, list_pts,mean,std):
+    def __init__(self,Nvar, Npar1, Npar2, Nres, bornes, list_pts,mean,std,additional_param):
         
         self.Nvar = Nvar
         self.Npar1 = Npar1
@@ -23,26 +23,28 @@ class Minimize():
         self.mean = mean
         self.std = std
         
+        self.additional_param = additional_param
+        
     def f_to_minimize(self,param):
         
         
         param = param.reshape((1,param.shape[0]))
-        test_data = np.empty((self.list_pts.shape[0], self.Nvar + self.Npar1 + self.Npar2))
+        test_data = np.empty((self.list_pts.shape[0], self.Nvar + self.Npar1 ))
         test_data[:,:self.Nvar] = self.list_pts
         test_data[:,self.Nvar:self.Nvar + self.Npar1] = param 
         
         #Ajout de paramètre suplémentaire ici a*x
-        more_param = test_data[:,0]*test_data[:,1]
-        more_param = more_param.reshape((more_param.shape[0],1))
-        test_data[:,self.Nvar + self.Npar1:] = more_param
+        test_data = self.complete_dataset(test_data, self.Nvar,self.Npar1,self.additional_param)
         
         #Normalisation des données
-        test_data -= self.mean[:self.Npar1 + self.Npar2 + self.Nvar]
-        test_data /= self.std[:self.Npar1 + self.Npar2 + self.Nvar]
+        test_data -= self.mean[:len(self.mean)-self.Nres]
+        test_data /= self.std[:len(self.std)-self.Nres]
         
         #Prediction of the model
         pred  = self.model_prediction_test(test_data)  
         pred = pred.reshape(pred.shape[0],)
+        
+        pred -= self.exp_values[:,1]
 
         
         return pred

@@ -5,11 +5,13 @@ Created on Mon Jun 22 11:40:46 2020
 @author: hugov
 """
 import matplotlib.pyplot as plt
+from tensorflow import keras
 from MLNN import MLNN
+import os
 
-def neurofit(database, database_eval, Nvar, Npar1, Npar2, Nres, bornes, list_pts):
+def neurofit(database, database_eval, Nvar, Npar1, Npar2, Nres, bornes, list_pts,exp_values, additional_param):
     
-    emul = MLNN(database, database_eval, Nvar, Npar1, Npar2, Nres, bornes, list_pts)    
+    emul = MLNN(database, database_eval, Nvar, Npar1, Npar2, Nres, bornes, list_pts, exp_values,additional_param)    
     
     #Parameters of the Neural Networks
     num_hidden_layers = 1
@@ -20,7 +22,11 @@ def neurofit(database, database_eval, Nvar, Npar1, Npar2, Nres, bornes, list_pts
     batch = [10]
     
     #Training the model
-    emul.build_model(num_hidden_layers,architecture,act_func)
+    if os.path.isfile('last_model.h5'):
+        emul.model = keras.models.load_model('last_model.h5')
+    else:
+        emul.build_model(num_hidden_layers,architecture,act_func)
+    
     emul.train_model(successive_fit_numb,epoch,batch)
     emul.training_view(successive_fit_numb)
     
