@@ -7,7 +7,6 @@ Created on Thu Jun 18 15:48:18 2020
 
 import os 
 from tensorflow import keras
-import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
 import math
@@ -15,10 +14,10 @@ from minimize import Minimize
 from keras.callbacks import ModelCheckpoint
 
 class MLNN(Minimize):
-    def __init__(self,database,database_eval,Nvar,Npar1,Npar2,Nres, bornes, list_pts,exp_values,additional_param):
+    def __init__(self,database,database_eval,Nvar,Npar1,Npar2,Nres, bornes, list_pts,additional_param):
         
-        #Force Keras to work with 'float64'
-        tf.keras.backend.set_floatx('float64')
+        
+        
         
         #Involve additional parmater in the database
         aux = self.complete_dataset(database,Nvar,Npar1,additional_param)
@@ -53,9 +52,10 @@ class MLNN(Minimize):
         
         self.model = keras.models.Sequential()
         
-        exp_values[:,1] -= mean[4]
-        exp_values[:,1] /= std[4]
-        self.exp_values = exp_values
+#        self.exp_values = np.copy(exp_values)
+#        self.exp_values[:,1] -= mean[4]
+#        self.exp_values[:,1] /= std[4]
+        
        
         #Normalization of data
         
@@ -135,7 +135,7 @@ class MLNN(Minimize):
         test_targets :
         weights : array of numbers that specify how much weight each sample in a batch should have in computing the total loss
         """
-        verb = 2
+        verb = 1
         #A simpler check-point strategy is to save the model weights to the same file, if and only if the validation accuracy improves
         #The best model is saved in file "bestb.h5"
         checkpoint = ModelCheckpoint( monitor='loss', filepath='weights.best.hdf5', save_best_only=True,verbose=verb)   

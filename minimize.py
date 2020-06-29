@@ -4,7 +4,7 @@ Created on Thu Jun 18 15:46:39 2020
 
 @author: hugov
 """
-import math
+
 import numpy as np
 from scipy.optimize import least_squares
 
@@ -41,10 +41,11 @@ class Minimize():
         test_data /= self.std[:len(self.std)-self.Nres]
         
         #Prediction of the model
+        
         pred  = self.model_prediction_test(test_data)  
         pred = pred.reshape(pred.shape[0],)
         
-        pred -= self.exp_values[:,1]
+        #pred -= self.exp_values[:,1]
 
         
         return pred

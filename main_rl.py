@@ -65,7 +65,7 @@ for i in range( database.shape[0] ):
     database[i,0] = x
     database[i,1] = a
     database[i,2] = b
-    database[i,3] = fct(x,a,b) #- exp_values[j,1]
+    database[i,3] = fct(x,a,b) - exp_values[j,1]
 
 database_eval = np.zeros( ( 500, Nvar + Npar1  + Nres ) )
 
@@ -77,13 +77,13 @@ for i in range( database_eval.shape[0] ):
     database_eval[i,0] = x
     database_eval[i,1] = a
     database_eval[i,2] = b
-    database_eval[i,3] = fct(x,a,b) #- exp_values[j,1]
+    database_eval[i,3] = fct(x,a,b) - exp_values[j,1]
 
 def additional_param(param_list):
     """
     This function will take param in the same order than in database and compute the additional
     parameter discribe by user.
-    The user have to give the number of additional parameter desired and give the function expected 
+    The user have to give the number of additional parameter desired and give the functions expected 
     in return 
     
     Input : List of parameters (do not change)
@@ -96,9 +96,9 @@ def additional_param(param_list):
 
 
 # start the fitting procedure with neurofit
-Nstep= 1
+Nstep= 2
 for istep in range( Nstep ):
-    pred = neurofit( database , database_eval , Nvar, Npar1, Npar2, Nres, bornes, list_pts ,exp_values,additional_param)
+    pred = neurofit( database , database_eval , Nvar, Npar1, Npar2, Nres, bornes, list_pts ,additional_param)
     # pred should be a table of N prediction (line with j,a,b; j being the index of a line of the list_pts table); the last column can give the predicted rms for the value of a and b
     #  for i in range( pred.shape[0]):
        #j = int(pred[i,0])
@@ -110,7 +110,7 @@ for istep in range( Nstep ):
     next_line[0,0] = x
     next_line[0,Nres:Nvar + Npar1 ] = pred[0:Npar1]
     #result
-    next_line[0,Nvar + Npar1 ] = fct(x,a,b) #- exp_values[j,1]
+    next_line[0,Nvar + Npar1 ] = fct(x,a,b) - exp_values[j,1]
     database = np.concatenate(( database , next_line  ),axis=0)
     print("prédiction des paramètres :" ,pred)
     
