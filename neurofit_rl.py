@@ -49,9 +49,9 @@ def neurofit(database, database_eval, Nvar, Npar1, Npar2, Nres, bornes, list_pts
         emul.build_model(num_hidden_layers,architecture,act_func)
 
     #Training the model
+
     emul.train_model(successive_fit_numb,epoch,batch)
-    print(emul.trainModel_history[0].history['mean_absolute_error'][0])
-    print(emul.trainModel_history[0].history['mean_absolute_error'][-1])
+
     #Plot results
     #emul.training_view(successive_fit_numb)
 

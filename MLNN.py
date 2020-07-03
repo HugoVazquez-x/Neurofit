@@ -169,21 +169,26 @@ class MLNN(Minimize):
         col = math.ceil(successive_fit_numb/row)
         col = col*2
         t = 1
+        key = list(self.trainModel_history[0].history.keys())
+        loss = key[0]
+        val_loss = key[2]
+        mae = key [1]
+        val_mae = key[3]
         for i in range(successive_fit_numb):
 
             ax.append(fig.add_subplot(row,col,t))
-            ax[t-1].plot(self.trainModel_history[i].history['loss'])
-            ax[t-1].plot(self.trainModel_history[i].history['val_loss'])
+            ax[t-1].plot(self.trainModel_history[i].history[loss])
+            ax[t-1].plot(self.trainModel_history[i].history[val_loss])
             plt.title("Fit number %2d of training and validation loss" % i)
             plt.ylabel('loss')
             plt.xlabel('epoch')
             plt.legend(['train', 'eval'], loc='upper left')
             t +=1
             ax.append(fig.add_subplot(row,col,t))
-            ax[t-1].plot(self.trainModel_history[i].history['mean_absolute_error'])
-            ax[t-1].plot(self.trainModel_history[i].history['val_mean_absolute_error'])
+            ax[t-1].plot(self.trainModel_history[i].history[mae])
+            ax[t-1].plot(self.trainModel_history[i].history[val_mae])
             plt.title("Fit number %2d of training and validation mea" % i)
-            plt.ylabel('mea')
+            plt.ylabel('mae')
             plt.xlabel('epoch')
             plt.legend(['train', 'eval'], loc='upper left')
             t +=1
@@ -197,6 +202,10 @@ class MLNN(Minimize):
      return predictions
 
     def writing_results(self,name,Pred_results):
+        
+         key = list(self.trainModel_history[0].history.keys())
+         mae = key [1]
+         val_mae = key[3]
 
          nomFichier = name
          if os.path.isfile(nomFichier) :
@@ -205,8 +214,8 @@ class MLNN(Minimize):
             fichier = open(nomFichier,'w')
          
 
-         fichier.write(" " + str(self.trainModel_history[0].history['mean_absolute_error'][-1]))
-         fichier.write(" " + str(self.trainModel_history[0].history['val_mean_absolute_error'][-1]) )
+         fichier.write(" " + str(self.trainModel_history[0].history[mae][-1]))
+         fichier.write(" " + str(self.trainModel_history[0].history[val_mae][-1]) )
          for i in range(len(Pred_results)):
              for j in range(len(Pred_results[i])):
                  fichier.write(" " + str(Pred_results[i][j]))
