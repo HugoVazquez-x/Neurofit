@@ -61,12 +61,22 @@ nb_hid_lay = int(sys.argv[2])
 arch = []
 for i in range(3,len(sys.argv)):
     arch.append(int(sys.argv[i]))
-print(arch)
+    
 #Number of data for training
 nb_data_train = int(sys.argv[1])
 
 #writting results
-nomFichier = 'results.txt'
+nomFichier = 'all_results.txt'
+if os.path.isfile(nomFichier) :
+    fichier = open(nomFichier,'a')
+else:
+    fichier = open(nomFichier,'w')
+fichier.write("\n")
+fichier.write("#" + str(arch))
+fichier.write("#" + str(nb_data_train) + "\n")
+fichier.close()
+
+nomFichier = 'one_ligne_results.txt'
 if os.path.isfile(nomFichier) :
     fichier = open(nomFichier,'a')
 else:
@@ -135,12 +145,13 @@ def additional_param(param_list):
 Nstep= 50
 for istep in range( Nstep ):
     print("-----------START OF STEP %2d-----------------------------" % istep)
-
+    
+    nomFichier = 'all_results.txt'
     fichier = open(nomFichier,'a')
     fichier.write( str(istep) )
     fichier.close()
 
-    pred = neurofit( database , database_eval , Nvar, Npar1, Npar2, Nres, bornes, list_pts ,additional_param,nb_hid_lay,arch)
+    pred = neurofit( database , database_eval , Nvar, Npar1, Npar2, Nres, bornes, list_pts ,additional_param,nb_hid_lay,arch,Nstep,istep)
     # pred should be a table of N prediction (line with j,a,b; j being the index of a line of the list_pts table); the last column can give the predicted rms for the value of a and b
     for nb_pred in range(len(pred)):
         #random.seed(nb_pred*6-2)

@@ -128,7 +128,7 @@ class MLNN(Minimize):
         test_targets :
         weights : array of numbers that specify how much weight each sample in a batch should have in computing the total loss
         """
-        verb = 2
+        verb = 0
         #A simpler check-point strategy is to save the model weights to the same file, if and only if the validation accuracy improves
         #The best model is saved in file "bestb.h5"
         checkpoint = ModelCheckpoint( monitor='loss', filepath='weights.best.hdf5', save_best_only=True,verbose=verb)
@@ -196,14 +196,19 @@ class MLNN(Minimize):
 
      return predictions
 
-    def writing_results(self,Pred_results):
+    def writing_results(self,name,Pred_results):
 
-         nomFichier = 'results.txt'
-         fichier = open(nomFichier,'a')
+         nomFichier = name
+         if os.path.isfile(nomFichier) :
+             fichier = open(nomFichier,'a')
+         else:
+            fichier = open(nomFichier,'w')
+         
 
          fichier.write(" " + str(self.trainModel_history[0].history['mean_absolute_error'][-1]))
          fichier.write(" " + str(self.trainModel_history[0].history['val_mean_absolute_error'][-1]) )
          for i in range(len(Pred_results)):
-             fichier.write(" " + str(Pred_results[i]))
+             for j in range(len(Pred_results[i])):
+                 fichier.write(" " + str(Pred_results[i][j]))
          fichier.write("\n")
          fichier.close()
