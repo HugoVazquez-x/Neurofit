@@ -81,9 +81,11 @@ if os.path.isfile(nomFichier) :
     fichier = open(nomFichier,'a')
 else:
     fichier = open(nomFichier,'w')
-fichier.write("\n")
-fichier.write("#" + str(arch))
-fichier.write("#" + str(nb_data_train) + "\n")
+
+fichier.write( str(nb_data_train) + " ")
+fichier.write( str(len(arch)-1) + " ")
+for i in range(len(arch)):
+    fichier.write(str(arch[i]) + " ")
 fichier.close()
 
 #We start a dataset with 10 random values of x,a,b

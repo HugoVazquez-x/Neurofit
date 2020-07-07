@@ -12,6 +12,7 @@ import numpy as np
 import math
 from minimize import Minimize
 from keras.callbacks import ModelCheckpoint
+from keras.callbacks import EarlyStopping
 
 class MLNN(Minimize):
     def __init__(self,database,database_eval,Nvar,Npar1,Npar2,Nres, bornes, list_pts,additional_param):
@@ -132,7 +133,8 @@ class MLNN(Minimize):
         #A simpler check-point strategy is to save the model weights to the same file, if and only if the validation accuracy improves
         #The best model is saved in file "bestb.h5"
         checkpoint = ModelCheckpoint( monitor='loss', filepath='weights.best.hdf5', save_best_only=True,verbose=verb)
-        callbacks_list = [checkpoint]
+        earlystop = EarlyStopping( monitor="val_mean_absolute_error",min_delta=0,patience=200,verbose=2,mode="min",baseline=None,restore_best_weights=False)
+        callbacks_list = [checkpoint,earlystop]
         #? It might be necessary to use a validation dataset during trainig to detect OVERFFITING ?  validation_data = (x_test, y_test)
         print("----------Start of model Training-----------------------")
         for i in range(successive_fit_numb):

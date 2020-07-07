@@ -26,19 +26,21 @@ def neurofit(database, database_eval, Nvar, Npar1, Npar2, Nres, bornes, list_pts
     architecture = arch
     act_func = 'relu'
     successive_fit_numb = 1
-    #The number of epoch decrease in 1/x with regards to istep progress
-    epoch_max = 1000
-    epoch_min = 300
-    a = (Nstep/(Nstep-1))*(epoch_max-epoch_min)
-    b = (1/(Nstep-1))*(Nstep*epoch_min-epoch_max)
-    epoch = [math.ceil(a/(istep+1) + b)]
-    #The number of batch increase in 1/x with regars to istep progress
-    batch_max = 32
-    batch_min = 5
-    a1 = (Nstep/(1-Nstep))*(batch_min-batch_max)
-    b1 = batch_min + a1
-    batch = [math.ceil( -a1/(istep+1) + b1)]
-
+#    #The number of epoch decrease in 1/x with regards to istep progress
+#    epoch_max = 1000
+#    epoch_min = 300
+#    a = (Nstep/(Nstep-1))*(epoch_max-epoch_min)
+#    b = (1/(Nstep-1))*(Nstep*epoch_min-epoch_max)
+#    epoch = [math.ceil(a/(istep+1) + b)]
+#    #The number of batch increase in 1/x with regars to istep progress
+#    batch_max = 32
+#    batch_min = 5
+#    a1 = (Nstep/(1-Nstep))*(batch_min-batch_max)
+#    b1 = batch_min + a1
+#    batch = [math.ceil( -a1/(istep+1) + b1)]
+    epoch = [3000]
+    batch = [10]
+    
     #Force Keras to work with 'float64'
     keras.backend.set_floatx('float64')
 
