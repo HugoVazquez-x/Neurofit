@@ -58,44 +58,27 @@ class Minimize():
              bound_reshape[1].append(self.bornes[i][1])
         
         if (mode == 'random'):
-            #Compute the average rms with parameters in data_train
-            rms_mean = 0
-            for i in range(self.parameters.shape[0]):
-                rms_mean += self.rms(self.parameters[i])
+            #Initial guess on parameters
+            param_0 = np.empty((self.Npar1))
+            for i in range(self.Npar1):
+                param_0[i] = (self.bornes[i][1]- self.bornes[i][0])*np.random.random_sample() + self.bornes[i][0]   # random number in the bornes
             
-            rms_mean /= self.parameters.shape[0]
-            rms_pred = rms_mean + 10
-            
-            iteration = 0
-            #minimisation
-            while (rms_pred > rms_mean):
-                #Break conditions
-                if(iteration == 20):
-                    break  
-                #Initial guess on parameters
-                param_0 = np.empty((self.Npar1))
-                for i in range(self.Npar1):
-                    param_0[i] = (self.bornes[i][1]- self.bornes[i][0])*np.random.random_sample() + self.bornes[i][0]   # random number in the bornes
-                
-                #We compute severals gradient descent with differents algorithms methods to find the best minimum
-                res_trf = least_squares(self.f_to_minimize,param_0, bounds = bound_reshape, method = 'trf')
-                res_dogbox = least_squares(self.f_to_minimize,param_0, bounds = bound_reshape, method = 'dogbox')
-                res_lm = least_squares(self.f_to_minimize,param_0, method = 'lm')
-                print("--------Minimisation Iteration %2d----------" % iteration)
-                for i in range(2):
-                   #We use the last guess for input parameters 
-                   res_trf = least_squares(self.f_to_minimize,res_dogbox.x, bounds = bound_reshape, method = 'trf')
-                   res_dogbox = least_squares(self.f_to_minimize,res_trf.x, bounds = bound_reshape, method = 'dogbox')
-                #We find which algorithm method find the best prediction and compute its rms 
-                list_res = [res_trf,res_dogbox,res_lm]
-                rms_trf = self.rms(res_trf.x)
-                rms_dogbox = self.rms(res_dogbox.x)
-                rms_lm = self.rms(res_lm.x)
-                list_rms = [rms_trf,rms_dogbox,rms_lm]
-                rms_pred = min(list_rms)
-                rms_best_index = list_rms.index(rms_pred)
-                res = list_res[rms_best_index]
-                iteration += 1
+            #We compute severals gradient descent with differents algorithms methods to find the best minimum
+            res_trf = least_squares(self.f_to_minimize,param_0, bounds = bound_reshape, method = 'trf')
+            res_dogbox = least_squares(self.f_to_minimize,param_0, bounds = bound_reshape, method = 'dogbox')
+#            for i in range(2):
+#               #We use the last guess for input parameters 
+#               res_trf = least_squares(self.f_to_minimize,res_dogbox.x, bounds = bound_reshape, method = 'trf')
+#               res_dogbox = least_squares(self.f_to_minimize,res_trf.x, bounds = bound_reshape, method = 'dogbox')
+#            
+            #We find which algorithm method find the best prediction and compute its rms 
+            list_res = [res_trf,res_dogbox]
+            rms_trf = self.rms(res_trf.x)
+            rms_dogbox = self.rms(res_dogbox.x)
+            list_rms = [rms_trf,rms_dogbox]
+            rms_pred = min(list_rms)
+            rms_best_index = list_rms.index(rms_pred)
+            res = list_res[rms_best_index]
             
         if (mode == 'from_best'):            
             best_param_index = 0
@@ -110,22 +93,16 @@ class Minimize():
             #We compute severals gradient descent with differents algorithms methods to find the best minimum
             res_trf = least_squares(self.f_to_minimize,param_0, bounds = bound_reshape, method = 'trf')
             res_dogbox = least_squares(self.f_to_minimize,param_0, bounds = bound_reshape, method = 'dogbox')
-            res_lm = least_squares(self.f_to_minimize,param_0, method = 'lm')
-              
-            for i in range(2):
-                #We mix minimisation algorithme from last result 
-                res_trf = least_squares(self.f_to_minimize,res_dogbox.x, bounds = bound_reshape, method = 'trf')
-                res_dogbox = least_squares(self.f_to_minimize,res_trf.x, bounds = bound_reshape, method = 'dogbox')
-                   
-                print("res_trf = ",res_trf.x ," res_dogbox = ",res_dogbox.x)
+#            for i in range(2):
+#                #We mix minimisation algorithme from last result 
+#                res_trf = least_squares(self.f_to_minimize,res_dogbox.x, bounds = bound_reshape, method = 'trf')
+#                res_dogbox = least_squares(self.f_to_minimize,res_trf.x, bounds = bound_reshape, method = 'dogbox')
             #We find wich algorithm method find the best prediction and compute its rms 
-            list_res = [res_trf,res_dogbox,res_lm]
+            list_res = [res_trf,res_dogbox]
             rms_trf = self.rms(res_trf.x)
             rms_dogbox = self.rms(res_dogbox.x)
-            rms_lm = self.rms(res_lm.x)
-            list_rms = [rms_trf,rms_dogbox,rms_lm]
+            list_rms = [rms_trf,rms_dogbox]
             rms_pred = min(list_rms)
-            print("rms pred from best = ",rms_pred)
             rms_best_index = list_rms.index(rms_pred)
             res = list_res[rms_best_index]            
             
