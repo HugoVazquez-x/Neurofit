@@ -17,9 +17,9 @@ def x_in_y(x, y):
     else:
         return any((set(x).issubset(y_) for y_ in y))
 
-def neurofit(database, database_eval, Nvar, Npar1, Npar2, Nres, bornes, list_pts, additional_param,nb_hid_lay,arch,Nstep,istep):
+def neurofit(database, database_eval, Nvar, Npar1, Npar2, Nres, bornes, list_pts, additional_param,nb_hid_lay,arch,Nstep,istep,exp_values):
 
-    emul = MLNN(database, database_eval, Nvar, Npar1, Npar2, Nres, bornes, list_pts,additional_param)
+    emul = MLNN(database, database_eval, Nvar, Npar1, Npar2, Nres, bornes, list_pts,additional_param,exp_values)
 
     #Parameters of the Neural Networks
     num_hidden_layers = nb_hid_lay
@@ -60,11 +60,18 @@ def neurofit(database, database_eval, Nvar, Npar1, Npar2, Nres, bornes, list_pts
 
     #Minimization
     Pred_results = []
-    for i in range(10):
-        pred = emul.minimizing()
+    
+    ##One minimisation from best prediction
+    pred = emul.minimizing(mode = 'from_best')
+    Pred_results.append(pred)
+    
+    ##Nine minisation from random initial guess (with constraint on the rms prediction to be inferior of the average rms )
+    for i in range(9):                            
+        pred = emul.minimizing(mode = 'random')
         if (x_in_y(pred,Pred_results) == False):
             Pred_results.append(pred)
     Pred_results = np.array(Pred_results)
+    
     #Writing the results on two different files 
     if(istep == Nstep-1) :
         emul.writing_results("one_ligne_results.txt",Pred_results)

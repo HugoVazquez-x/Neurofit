@@ -52,7 +52,7 @@ bornes[2,1] = +5
 
 
 Nvar=1  # x
-Npar1=3  #a and b
+Npar1=3  #a,b,c
 Npar2=0 #parameter of correction
 Nres=1  #the result
 
@@ -153,7 +153,7 @@ for istep in range( Nstep ):
     fichier.write( str(istep) )
     fichier.close()
 
-    pred = neurofit( database , database_eval , Nvar, Npar1, Npar2, Nres, bornes, list_pts ,additional_param,nb_hid_lay,arch,Nstep,istep)
+    pred = neurofit( database , database_eval , Nvar, Npar1, Npar2, Nres, bornes, list_pts ,additional_param,nb_hid_lay,arch,Nstep,istep,exp_values)
     # pred should be a table of N prediction (line with j,a,b; j being the index of a line of the list_pts table); the last column can give the predicted rms for the value of a and b
     for nb_pred in range(len(pred)):
         #random.seed(nb_pred*6-2)
