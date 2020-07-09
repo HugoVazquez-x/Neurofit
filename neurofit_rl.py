@@ -38,7 +38,7 @@ def neurofit(database, database_eval, Nvar, Npar1, Npar2, Nres, bornes, list_pts
 #    a1 = (Nstep/(1-Nstep))*(batch_min-batch_max)
 #    b1 = batch_min + a1
 #    batch = [math.ceil( -a1/(istep+1) + b1)]
-    epoch = [3000]
+    epoch = [1000]
     batch = [10]
     
     #Force Keras to work with 'float64'
