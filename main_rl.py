@@ -172,8 +172,9 @@ for istep in range( Nstep ):
         #Add the first prediction (which is suppose to be the best prediction) 
         #in the database_eval. Variable x is changed. 
         if(nb_pred == 0):
-            j = random.randint( 0, list_pts.shape[0]-1)
-            x = list_pts[ j ]
+            x = list_pts[ random.randint( 0, list_pts.shape[0]-1) ]
+            while(x == next_line[0,0]):
+                x = list_pts[ random.randint( 0, list_pts.shape[0]-1) ]
             next_line[0,0] = x
             database_eval = np.concatenate((database_eval,next_line), axis=0)
             
