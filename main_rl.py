@@ -175,7 +175,7 @@ for istep in range( Nstep ):
             j = random.randint( 0, list_pts.shape[0]-1)
             x = list_pts[ j ]
             next_line[0,0] = x
-            database_eval = np.concatenate((database,next_line), axis=0)
+            database_eval = np.concatenate((database_eval,next_line), axis=0)
             
 fichier.close()
 
