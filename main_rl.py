@@ -167,8 +167,16 @@ for istep in range( Nstep ):
         next_line[0,Nres:Nvar + Npar1 ] = pred[nb_pred][0:Npar1]
         #result
         next_line[0,Nvar + Npar1 ] = fct(x,a,b,c) - exp_values[j,1]
+        #Add all the predictions in database for next training step
         database = np.concatenate(( database , next_line  ),axis=0)
-        
+        #Add the first prediction (which is suppose to be the best prediction) 
+        #in the database_eval. Variable x is changed. 
+        if(nb_pred == 0):
+            j = random.randint( 0, list_pts.shape[0]-1)
+            x = list_pts[ j ]
+            next_line[0,0] = x
+            database_eval = np.concatenate((database,next_line), axis=0)
+            
 fichier.close()
 
 #delete features of current model to start from sratch new model
