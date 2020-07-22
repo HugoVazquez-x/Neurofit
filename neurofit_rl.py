@@ -6,20 +6,14 @@ Created on Mon Jun 22 11:40:46 2020
 """
 from tensorflow import keras
 from MLNN import MLNN
-import math
 import numpy as np
 import os
+from tools import x_in_y
 
-def x_in_y(x, y):
-    # check if x is a nested list
-    if any(isinstance(i, list) for i in x):
-        return all((any((set(x_).issubset(y_) for y_ in y)) for x_ in x))
-    else:
-        return any((set(x).issubset(y_) for y_ in y))
 
 def neurofit(database, database_eval, Nvar, Npar1, Npar2, Nres, bornes, list_pts, additional_param,nb_hid_lay,arch,Nstep,istep,exp_values):
 
-    emul = MLNN(database, database_eval, Nvar, Npar1, Npar2, Nres, bornes, list_pts,additional_param,exp_values)
+    emul = MLNN(database, database_eval, Nvar, Npar1, Npar2, Nres, bornes, list_pts,additional_param,exp_values,istep)
 
     #Parameters of the Neural Networks
     num_hidden_layers = nb_hid_lay
@@ -38,9 +32,9 @@ def neurofit(database, database_eval, Nvar, Npar1, Npar2, Nres, bornes, list_pts
 #    a1 = (Nstep/(1-Nstep))*(batch_min-batch_max)
 #    b1 = batch_min + a1
 #    batch = [math.ceil( -a1/(istep+1) + b1)]
-    epoch = [1000]
+    epoch = [2000]
     batch = [10]
-    
+
     #Force Keras to work with 'float64'
     keras.backend.set_floatx('float64')
 
@@ -48,34 +42,41 @@ def neurofit(database, database_eval, Nvar, Npar1, Npar2, Nres, bornes, list_pts
     if os.path.isfile('last_model.h5'):
         emul.model = keras.models.load_model('last_model.h5')
     else:
-        emul.build_model(num_hidden_layers,architecture,act_func)
-
+        emul.buildModel(num_hidden_layers,architecture,act_func)
+  
+    
     #Training the model
+    emul.trainModel(successive_fit_numb,epoch,batch)
 
-    emul.train_model(successive_fit_numb,epoch,batch)
+    #Plot training resume
+    emul.plotTrainningHistory(successive_fit_numb)
+    
+    #Complete param_rms.txt for further use
+    emul.updateParamRmsFile()  
 
-    #Plot results
-    #emul.training_view(successive_fit_numb)
-
+    #Plot estimate function
+    emul.plotModel()
 
     #Minimization
-    Pred_results = []
-    
-    ##One minimisation from best prediction
+    Pred = []
+
+    ##One minimization from best prediction
     pred = emul.minimizing(mode = 'from_best')
-    Pred_results.append(pred)
-    
-    ##Nine minisation from random initial guess (with constraint on the rms prediction to be inferior of the average rms )
-    for i in range(9):                            
+    Pred.append(pred)
+
+    ##Nine minizations from random initial guess
+    for i in range(9):
         pred = emul.minimizing(mode = 'random')
-        if (x_in_y(pred,Pred_results) == False):
-            Pred_results.append(pred)
-    Pred_results = np.array(Pred_results)
-    
-    #Writing the results on two different files 
+        if (x_in_y(pred,Pred) == False):
+            Pred.append(pred)
+    Pred = np.array(Pred)
+
+    #Writing the results on two different files
     if(istep == Nstep-1) :
-        emul.writing_results("one_ligne_results.txt",Pred_results)
-        
-    emul.writing_results("all_results.txt",Pred_results)
+        emul.writeResults("one_ligne_results.txt",Pred)
+
+    emul.writeResults("all_results.txt",Pred)
     
-    return Pred_results
+    #print("Predicted Rms for gam0 = 1 and fcorr = 1 : " ,emul.getRms(np.array([1,1,1])))
+    
+    return Pred

@@ -11,20 +11,22 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 from minimize import Minimize
-from keras.callbacks import ModelCheckpoint
-from keras.callbacks import EarlyStopping
+from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras import regularizers
 
 class MLNN(Minimize):
-    def __init__(self,database,database_eval,Nvar,Npar1,Npar2,Nres, bornes, list_pts,additional_param,exp_values):
+    def __init__(self,database,database_eval,Nvar,Npar1,Npar2,Nres, bornes, list_pts,additional_param,exp_values,istep):
 
 
 
-
+        self.step = istep
         #Involve additional parameters in the database
-        aux = self.complete_dataset(database,Nvar,Npar1,additional_param)
+        aux = self.completeDataset(database,Nvar,Npar1,Npar2,Nres,additional_param)
         data_train = np.concatenate((aux,database[:,Nvar + Npar1:]), axis = 1)
-        aux_eval = self.complete_dataset(database_eval,Nvar,Npar1,additional_param)
+        aux_eval = self.completeDataset(database_eval,Nvar,Npar1,Npar2,Nres,additional_param)
         data_eval = np.concatenate((aux_eval,database_eval[:,Nvar + Npar1:]), axis = 1)
+        
 
         #Compute mean and std of the datasets
         if os.path.isfile('mean.txt') and os.path.isfile('std.txt') :
@@ -61,13 +63,12 @@ class MLNN(Minimize):
         self.x_eval = data_eval[:,:data_eval.shape[1]-Nres]
         self.y_eval = data_eval[:,data_eval.shape[1]-Nres:]
         self.y_eval = self.y_eval.reshape(self.y_eval.shape[0],)
-        
-        #Collect list of parameters
-        self.parameters = self.x_train[:,Nvar:Nvar+Npar1]
-        #Collect exp_values
-        self.exp_values = exp_values
-        #Normalization of data
 
+        #Collect list of parameters
+        self.parameters = np.copy(self.x_train[:,Nvar:Nvar+Npar1])
+        #Collect exp_values
+        self.exp_values = np.copy(exp_values)
+        #Normalization of data
         self.x_train -= mean[:len(self.mean)-self.Nres]
         self.x_train /= std[:len(self.std)-self.Nres]
         self.x_eval -= mean[:len(self.mean)-self.Nres]
@@ -79,14 +80,17 @@ class MLNN(Minimize):
         #ModelHistory in order to draw chart
         self.trainModel_history = []
 
-    def complete_dataset(self,dataset,Nvar,Npar1,additional_param):
+    def completeDataset(self,dataset,Nvar,Npar1,Npar2,Nres,additional_param):
         T = []
         for i in range(Nvar + Npar1):
             T.append(dataset[:,i])
 
         D = additional_param(T)
-        param_more  = np.zeros((dataset.shape[0],D[0]))
 
+        if(D[0] == 0):
+            return dataset[:,:dataset.shape[1]-(Nres+Npar2)]
+
+        param_more  = np.zeros((dataset.shape[0],D[0]))
         for  i in range(D[0]):
             param_more[:,i] = D[i+1]
 
@@ -94,7 +98,7 @@ class MLNN(Minimize):
 
         return dataset
 
-    def build_model(self,num_hidden_layers,architecture,act_func,output_class=1,optimizers = 'adam',losses = 'mse',metrics = 'mae'):
+    def buildModel(self,num_hidden_layers,architecture,act_func,output_class=1,optimizers = 'adam',losses = 'mse',metrics = 'mae'):
 
         """
         Build a a densely connected neural network model from user input
@@ -107,19 +111,27 @@ class MLNN(Minimize):
         metrics : mae,acc,...
         output_class : Number of classes in the ouput vector
         """
-        #Input Layer
-        self.model.add(keras.layers.Dense(architecture[0], activation=act_func,input_shape= (self.x_train.shape[1],)))
+        #First hidden layer
+        self.model.add(keras.layers.Dense(architecture[0],
+                                          activation=act_func,
+                                          input_shape= (self.x_train.shape[1],),
+                                          kernel_regularizer= regularizers.l1_l2(l1=1e-5, l2=1e-4),
+                                          bias_regularizer=regularizers.l2(1e-4),
+                                          activity_regularizer=regularizers.l2(1e-5))  )
 
         #Hidden Layers
         for i in range(1,num_hidden_layers+1):
-            self.model.add(keras.layers.Dense(architecture[i], activation=act_func))
+            self.model.add(keras.layers.Dense(architecture[i], activation=act_func,
+                           kernel_regularizer= regularizers.l1_l2(l1=1e-5, l2=1e-4),
+                           bias_regularizer=regularizers.l2(1e-4),
+                           activity_regularizer=regularizers.l2(1e-5)))
 
         #Output Layer
         self.model.add(keras.layers.Dense(output_class))
         self.model.compile(optimizer= optimizers, loss = losses, metrics=[metrics])
 
 
-    def train_model(self,successive_fit_numb,epochs_array,batch_array):
+    def trainModel(self,successive_fit_numb,epochs_array,batch_array):
         """
         Train the model in regards to the user input
         At the ends of the training, the best model in regards to monitor function is saved in "best.h5"
@@ -136,10 +148,11 @@ class MLNN(Minimize):
         verb = 0
         #A simpler check-point strategy is to save the model weights to the same file, if and only if the validation accuracy improves
         #The best model is saved in file "bestb.h5"
+
         checkpoint = ModelCheckpoint( monitor='val_loss', filepath='weights.best.hdf5', save_best_only=True,verbose=verb)
-        earlystop = EarlyStopping( monitor="val_mean_absolute_error",min_delta= 0.1,patience=200,verbose=2,mode="min",baseline=None,restore_best_weights=True)
+        earlystop = EarlyStopping( monitor="val_mean_absolute_error",min_delta= 0.01,patience=40,verbose=2,mode="min",baseline=None,restore_best_weights=True)
         callbacks_list = [checkpoint,earlystop]
-    
+
         print("----------Start of model Training-----------------------")
         for i in range(successive_fit_numb):
             seqM = self.model.fit(self.x_train, self.y_train,
@@ -161,7 +174,7 @@ class MLNN(Minimize):
 
         print("----------The model has been saved in 'model.h5'--------")
 
-    def training_view(self,successive_fit_numb):
+    def plotTrainningHistory(self,successive_fit_numb):
 
         """
         Allows to visualize model training history
@@ -198,17 +211,20 @@ class MLNN(Minimize):
             plt.xlabel('epoch')
             plt.legend(['train', 'eval'], loc='upper left')
             t +=1
-
+            
+        plt.savefig("TrainingHistory/step{:d}.png".format(self.step)) 
         plt.show()
-
-    def model_prediction_test(self,test_data):
-
-     predictions = self.model.predict(test_data, verbose=0, batch_size = test_data.shape[0])
-
-     return predictions
-
-    def writing_results(self,name,Pred_results):
         
+
+    def getPrediction(self,data):
+
+     y_pred = self.model.predict(data, verbose=0, batch_size = data.shape[0])
+     y_pred = y_pred.reshape((y_pred.shape[0],))
+
+     return y_pred
+
+    def writeResults(self,name,Pred_results):
+
          key = list(self.trainModel_history[0].history.keys())
          mae = key [1]
          val_mae = key[3]
@@ -218,7 +234,7 @@ class MLNN(Minimize):
              fichier = open(nomFichier,'a')
          else:
             fichier = open(nomFichier,'w')
-         
+
 
          fichier.write(" " + str(self.trainModel_history[0].history[mae][-1]))
          fichier.write(" " + str(self.trainModel_history[0].history[val_mae][-1]) )
@@ -227,3 +243,30 @@ class MLNN(Minimize):
                  fichier.write(" " + str(Pred_results[i][j]))
          fichier.write("\n")
          fichier.close()
+
+    def plotModel(self):
+        """
+        This function allows to plot the function estimate by the model
+        to the points defined by list_pts and with its best parameters prediction
+        """
+        #Get best paramters predicted by the model
+        param = self.getBestParam()
+
+        #Get a dataset of list_pts with "param" used as parameters
+        data = self.getDataset(param)
+
+        #Predictions
+        y_pred = self.getPrediction(data)
+
+        #Plot result
+        plt.figure(figsize = (10,10))
+        x = self.exp_values[:,0] + self.exp_values[:,1]
+        #y = [self.fct(t,2,1,3) for t in x]
+        plt.scatter(x,y_pred,marker = "+",c = 'b',label = 'Estimate function\n' + str(param))
+        #plt.scatter(x,np.log(self.exp_values[:,2]),marker = 'x', c='r',label = 'Experimental measurement')
+        plt.xlabel('A')
+        plt.ylabel('log10(y_pred/y_exp)')
+        plt.legend()
+        plt.savefig("ModelPredHistory/step{:d}.png".format(self.step ))
+        plt.show()
+        
