@@ -161,7 +161,8 @@ class MLNN(Minimize):
                                   validation_data = (self.x_eval, self.y_eval),
                                   verbose = verb,
                                   sample_weight = self.weights,
-                                  callbacks = callbacks_list)
+                                  callbacks = callbacks_list,
+                                  shuffle = True)
 
             self.trainModel_history.append(seqM)
         print("----------End of model Training-------------------------")
@@ -182,7 +183,7 @@ class MLNN(Minimize):
         training epochs, for each successive fit.
         """
 
-        fig = plt.figure(figsize=(10,10))
+        fig = plt.figure(figsize=(20,20))
         ax =[]
         row = round(math.sqrt(successive_fit_numb))
         col = math.ceil(successive_fit_numb/row)
@@ -212,7 +213,7 @@ class MLNN(Minimize):
             plt.legend(['train', 'eval'], loc='upper left')
             t +=1
             
-        plt.savefig("TrainingHistory/step{:d}.png".format(self.step)) 
+        plt.savefig("GapForecast/bet2_{:d}.png".format(self.step)) 
         plt.show()
         
 

@@ -17,8 +17,8 @@ import shutil
 
 #Number of
 
-Nvar=2  # N,Z
-Npar1=3  #a,b,c
+Nvar=2  # Z,A
+Npar1=4  #gam0,gam1,fcorr,alpha
 Npar2=0 #parameter of correction
 Nres=1  #the result
 
@@ -26,14 +26,17 @@ Nres=1  #the result
 # The user define the boundaries for each parameter
 bornes = np.zeros( ( Npar1,3  ) )
 
-bornes[0,0] = 0.1
-bornes[0,1] = +5
+bornes[0,0] = 3
+bornes[0,1] = +15
 
-bornes[1,0] = 0.1
-bornes[1,1] = +5
+bornes[1,0] = 0.01
+bornes[1,1] = 500
 
 bornes[2,0] = 0.1
 bornes[2,1] = +5
+
+bornes[3,0] = 0.5
+bornes[3,1] = +3
 
 #Architecture parameters
 nb_hid_lay = int(sys.argv[1])
@@ -42,7 +45,7 @@ for i in range(2,len(sys.argv)):
     arch.append(int(sys.argv[i]))
 
 #Read input data
-dataset = np.loadtxt(fname = "res2.dat")
+dataset = np.loadtxt(fname = "res4.dat")
 Z_A_Yexp_Err = np.loadtxt(fname = "list_pts_exp")
 exp_values = np.copy(Z_A_Yexp_Err[:,:3])
 list_pts = np.copy(Z_A_Yexp_Err[:,:Nvar])
@@ -90,19 +93,24 @@ def additional_param(param_list):
     Input : List of parameters (do not change)
     Output <class 'list'>: Number of additional parmaters,additionnal parameters
     """
-    N_add_param = 0
+    N_add_param = 1
+    A = param_list[1]
+    gam0 = param_list[2]
+    gam1 = param_list[3]
+    alpha = param_list[5]
+    
 
-    return [N_add_param]
+    return [N_add_param,gam0-np.power(A,alpha)/((np.power(300,alpha)/gam0)+gam1)]
 
-def getPhysicalCode(gam0,gam1,fcorr, Z,A,Yexp,Err):
+def getPhysicalCode(gam0,gam1,fcorr,alpha,Z,A,Yexp,Err):
     f_param_lorentz = open("BetaDecay/Package_script/param_lorentz.in",'w') 
-    f_param_lorentz.write(str(gam0) + " " + str(gam1) + " " + str(fcorr))
+    f_param_lorentz.write(str(gam0) + " " + str(gam1) + " " + str(fcorr) + " " + str(alpha))
     f_param_lorentz.close()
     shutil.copy("./BetaDecay/Package_script/tminus0.in","./BetaDecay/Package_script/tminus.in")
     f = open("./BetaDecay/Package_script/tminus.in",'a')
     f.write(str(int(Z))+ " " + str(int(A)) + " " + str(Yexp) + " " + str(Err) )
     f.close()
-    os.system("run_a2.bat")
+    os.system("run_a4.bat")
     f = open("./BetaDecay/Package_script/t12_d1m_bm.g1.0",'r')
     content = f.readlines()
     f.close()
@@ -116,15 +124,15 @@ def getPhysicalCode(gam0,gam1,fcorr, Z,A,Yexp,Err):
     return Ycalc
 
         
-def getTrueRms(gam0,gam1,fcorr,Z_A_Yexp_Err):
+def getTrueRms(gam0,gam1,fcorr,alpha,Z_A_Yexp_Err):
     print("-------------------COMPUTING TRUE RMS----------------""")
     val = []
     t_0 = time.time()
     f_param_lorentz = open("BetaDecay/Package_script/param_lorentz.in",'w') 
-    f_param_lorentz.write(str(gam0) + " " + str(gam1) + " " + str(fcorr))
+    f_param_lorentz.write(str(gam0) + " " + str(gam1) + " " + str(fcorr) + " " + str(alpha))
     f_param_lorentz.close()
-    os.system("run_compute_rms2.bat")
-    rms_value = np.loadtxt("BetaDecay/Package_script/rms2.dat",ndmin =2)
+    os.system("run_compute_rms4.bat")
+    rms_value = np.loadtxt("BetaDecay/Package_script/rms4.dat",ndmin =2)
     for value in rms_value:
         Yexp = value[1]
         Ycalc = value[0]
@@ -138,7 +146,7 @@ def getTrueRms(gam0,gam1,fcorr,Z_A_Yexp_Err):
 
 # start the fitting procedure with neurofit
 t0_total = time.time()
-Nstep= 10
+Nstep= 100
 for istep in range( Nstep ):
     t0=time.time()
     print("-----------START OF STEP %2d-----------------------------" % istep)
@@ -158,7 +166,8 @@ for istep in range( Nstep ):
         gam0 =  pred[ipred][0]
         gam1 = pred[ipred][1]
         fcorr =  pred[ipred][2]
-        estimate_rms = pred[ipred][3]
+        alpha = pred[ipred][3]
+        estimate_rms = pred[ipred][4]
         next_line  = np.zeros( ( 1, Nvar + Npar1 + Npar2 + Nres ) )
         next_line[0,:Nvar] = Z_A
         next_line[0,Nvar:Nvar + Npar1 ] = pred[ipred][0:Npar1]
@@ -167,32 +176,42 @@ for istep in range( Nstep ):
         #Use Physical Code to compute new values
         Yexp = Z_A_Yexp_Err[j][2]
         Err = Z_A_Yexp_Err[j][3]
-        Ycalc = getPhysicalCode(gam0,gam1,fcorr,Z_A[0],Z_A[1],Yexp,Err)
+        Ycalc = getPhysicalCode(gam0,gam1,fcorr,alpha,Z_A[0],Z_A[1],Yexp,Err)
         next_line[0,Nvar + Npar1 ] = math.log10(Yexp) - math.log10(Ycalc)
         
         #Add all the predictions in database for next training step
         database = np.concatenate(( database , next_line  ),axis=0)
         
-
+        #add the predictions in res.dat 
+        nomF = "res3.dat"
+        fichier = open(nomF,'a')
+        fichier.write(str(Z_A[0]) + " " + str(Z_A[1]) + " " + str(gam0)  + " " 
+                      + str(gam1) + " " + str(fcorr)  + " " + str(alpha) + " "
+                      + str(Ycalc)+ " " + str(Yexp)   + " " + str(Err)   + "\n")
+        fichier.close()
+        
         if(ipred == 0):
             #Use Physical Code to compute the Rms of the best prediction only each 5 steps
-#            if ( istep%5 == 0):
-            nomF = "best_pred_rms.txt"
-            if os.path.isfile(nomF) :
-                fichier = open(nomF,'a')
-            else:
-                fichier = open(nomF,'w')
-            fichier.write(str(istep) + " " + str(gam0) + " " + str(gam1) + " " + str(fcorr) + " " + str(getTrueRms(gam0,gam1,fcorr,Z_A_Yexp_Err)) + " " + str(estimate_rms)+ "\n")
-            fichier.close()
-#            else :
-#                nomF = "best_pred_rms.txt"
-#                if os.path.isfile(nomF) :
-#                    fichier = open(nomF,'a')
-#                else:
-#                    fichier = open(nomF,'w')
-#                fichier.write(str(Nstep) + " " + str(gam0) + " " + str(fcorr)  + " " + str(estimate_rms)+ "\n")
-#                fichier.close()
-#            
+            if ( istep%5 == 0):
+                nomF = "best_pred_rms.txt"
+                if os.path.isfile(nomF) :
+                    fichier = open(nomF,'a')
+                else:
+                    fichier = open(nomF,'w')
+                fichier.write('#' + str(istep) + " " + str(gam0) + " " + str(gam1) + " " 
+                                  + str(fcorr) + " " + str(alpha)+ " "
+                                  + str(getTrueRms(gam0,gam1,fcorr,alpha,Z_A_Yexp_Err)) + " " + str(estimate_rms)+ "\n")
+                fichier.close()
+            else :
+                nomF = "best_pred_rms.txt"
+                if os.path.isfile(nomF) :
+                    fichier = open(nomF,'a')
+                else:
+                    fichier = open(nomF,'w')
+                fichier.write(str(istep)    + " " + str(gam0)  + " " + str(gam1) + " "
+                              + str(fcorr)  + " " + str(alpha) + " " + str(estimate_rms)+ "\n")
+                fichier.close()
+            
             #Add the first prediction (which is suppose to be the best prediction)
             #in the database_eval. Variable x is changed.                
             x = list_pts[ random.randint( 0, list_pts.shape[0]-1) ]
