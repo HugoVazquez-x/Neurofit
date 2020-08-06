@@ -31,7 +31,7 @@ for i in range(3,len(sys.argv)):
     arch.append(int(sys.argv[i]))
 
 #Split the dataset  into K-fold validation (data_train and data_eval)
-k = 4
+k = 3
 nb_data_eval = math.ceil(dataset.shape[0]*(1/k))
 nb_data_train = dataset.shape[0] - nb_data_eval
 
@@ -54,9 +54,9 @@ def additional_param(param_list):
 
 for fold in range(k):
     print("----------K-FOLD %2d-----------------------------" % fold)
-    database_eval = dataset[nb_data_eval * fold: nb_data_eval * (fold + 1),:]
-    database = np.concatenate((dataset[:nb_data_eval * fold,:],
-                              dataset[nb_data_eval * (fold + 1):,:]),axis=0)
+    database_eval = np.copy(dataset[nb_data_eval * fold: nb_data_eval * (fold + 1),:])
+    database = np.copy( np.concatenate((dataset[:nb_data_eval * fold,:],
+                              dataset[nb_data_eval * (fold + 1):,:]),axis=0))
     
     database[:,database.shape[1]-2:] = np.log10(database[:,database.shape[1]-2:])
     database_eval[:,database_eval.shape[1]-2:] = np.log10(database_eval[:,database_eval.shape[1]-2:])
@@ -160,22 +160,30 @@ for fold in range(k):
     
     #Performances
     validation_score = nnet.model.evaluate(nnet.x_eval,nnet.y_eval,verbose =0)
-    print(nnet.model.metrics_names)
-    print(validation_score)
     validation_scores.append(math.sqrt(validation_score[0]))
     
     #Plot performances
     key = list(nnet.trainModel_history[0].history.keys())
     val_mae = key[3]
-    print("val_mae :" ,nnet.trainModel_history[-1].history[val_mae])
     
     os.remove("last_model.h5")
     os.remove("weights.best.hdf5")
     os.remove("mean.txt")
     os.remove("std.txt")
 
-print(validation_scores)
+
+
 validation_score = np.average(validation_scores)
+
+
+nomFichier = 'GapForecast_results.txt'
+if os.path.isfile(nomFichier) :
+    fichier = open(nomFichier,'a')
+else:
+    fichier = open(nomFichier,'w')
+fichier.write(param_code + " " + str(arch) + " " + str(validation_score) + "\n")
+fichier.close()
+
 
 
 
