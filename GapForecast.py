@@ -150,7 +150,7 @@ for fold in range(k):
     act_func = 'relu'
     successive_fit_numb = 5
     epoch = [2000,2000,2000,2000,2000]
-    batch = [10,10,10,10,10]
+    batch = [3,3,3,3,3]
     
     #Force Keras to work with 'float64'
     keras.backend.set_floatx('float64')
@@ -166,7 +166,7 @@ for fold in range(k):
     nnet.trainModel(successive_fit_numb,epoch,batch)
     
     #Plot training resume
-    nnet.plotTrainningHistory(successive_fit_numb)
+    #nnet.plotTrainningHistory(successive_fit_numb)
     
     #Performances
     sigma_eval = nnet.model.predict(nnet.x_eval,verbose =0)

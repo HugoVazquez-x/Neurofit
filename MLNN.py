@@ -115,9 +115,9 @@ class MLNN(Minimize):
         self.model.add(keras.layers.Dense(architecture[0],
                                           activation=act_func,
                                           input_shape= (self.x_train.shape[1],),
-                                          kernel_regularizer= regularizers.l1_l2(l1=1e-5, l2=1e-4),
-                                          bias_regularizer=regularizers.l2(1e-4),
-                                          activity_regularizer=regularizers.l2(1e-5))  )
+                                          kernel_regularizer= regularizers.l1_l2(l1=0.01, l2=0.01),
+                                          bias_regularizer=regularizers.l2(0.01),
+                                          activity_regularizer=regularizers.l2(0.01))  )
 
         #Hidden Layers
         for i in range(1,num_hidden_layers+1):
@@ -150,7 +150,7 @@ class MLNN(Minimize):
         #The best model is saved in file "bestb.h5"
 
         checkpoint = ModelCheckpoint( monitor='val_loss', filepath='weights.best.hdf5', save_best_only=True,verbose=verb)
-        earlystop = EarlyStopping( monitor="val_mean_absolute_error",min_delta= 0.01,patience=40,verbose=2,mode="min",baseline=None,restore_best_weights=True)
+        earlystop = EarlyStopping( monitor="val_loss",min_delta= 0.01,patience=40,verbose=2,mode="min",baseline=None,restore_best_weights=True)
         callbacks_list = [checkpoint,earlystop]
 
         print("----------Start of model Training-----------------------")
