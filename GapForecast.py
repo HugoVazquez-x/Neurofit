@@ -40,6 +40,7 @@ nb_data_eval = math.ceil(dataset.shape[0]*(1/k))
 nb_data_train = dataset.shape[0] - nb_data_eval
 
 validation_scores = []
+learning_scores = []
 
 def additional_param(param_list):
     """
@@ -62,14 +63,15 @@ for fold in range(k):
     database = np.copy( np.concatenate((dataset[:nb_data_eval * fold,:],
                               dataset[nb_data_eval * (fold + 1):,:]),axis=0))
     
-    
-    database[:,database.shape[1]-2] = database[:,database.shape[1]-1] - database[:,database.shape[1]-2]
-    database = database[:,:database.shape[1]-1]
+    Calc_train = np.copy(database[:,database.shape[1]-2:database.shape[1]-1])
+    Exp_train = np.copy(database[:,database.shape[1]-1:database.shape[1]])
+    database[:,database.shape[1]-2] = np.copy(database[:,database.shape[1]-1] - database[:,database.shape[1]-2])
+    database = np.copy(database[:,:database.shape[1]-1])
     
     Calc_eval = np.copy(database_eval[:,database_eval.shape[1]-2:database_eval.shape[1]-1])
     Exp_eval = np.copy(database_eval[:,database_eval.shape[1]-1:database_eval.shape[1]])
-    database_eval[:,database_eval.shape[1]-2] = database_eval[:,database_eval.shape[1]-1] - database_eval[:,database_eval.shape[1]-2]
-    database_eval = database_eval[:,:database_eval.shape[1]-1]
+    database_eval[:,database_eval.shape[1]-2] = np.copy(database_eval[:,database_eval.shape[1]-1] - database_eval[:,database_eval.shape[1]-2])
+    database_eval = np.copy(database_eval[:,:database_eval.shape[1]-1])
     
     #Decrypte param_code
     if(param_code == "1000"):
@@ -164,12 +166,13 @@ for fold in range(k):
     nnet.trainModel(successive_fit_numb,epoch,batch)
     
     #Plot training resume
-    #nnet.plotTrainningHistory(successive_fit_numb)
+    nnet.plotTrainningHistory(successive_fit_numb)
     
     #Performances
-    sigma = nnet.model.predict(nnet.x_eval,verbose =0)
-    validation_scores.append(math.sqrt(sum((Calc_eval + sigma - Exp_eval )**2)/sigma.shape[0]))
-    
+    sigma_eval = nnet.model.predict(nnet.x_eval,verbose =0)
+    sigma_learning = nnet.model.predict(nnet.x_train,verbose =0)
+    validation_scores.append(math.sqrt(sum((Calc_eval + sigma_eval - Exp_eval )**2)/sigma_eval.shape[0]))
+    learning_scores.append(math.sqrt(sum((Calc_train+ sigma_learning - Exp_train )**2)/sigma_learning.shape[0]))
     #Plot performances
     key = list(nnet.trainModel_history[0].history.keys())
     val_mae = key[3]
@@ -182,14 +185,14 @@ for fold in range(k):
 
 
 validation_score = np.average(validation_scores)
-
+learning_score = np.average(learning_scores)
 
 nomFichier = 'GapForecast_results.txt'
 if os.path.isfile(nomFichier) :
     fichier = open(nomFichier,'a')
 else:
     fichier = open(nomFichier,'w')
-fichier.write(param_code + " " + str(arch) + " " + str(validation_score) + "\n")
+fichier.write(param_code + " " + str(arch) + " " + str(validation_score) +  " "+ str(learning_score) + "\n")
 fichier.close()
 
 print(time.time() - t0)
