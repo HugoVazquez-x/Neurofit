@@ -13,7 +13,9 @@ import os
 import sys
 from MLNN import MLNN
 from tensorflow import keras
+import time
 
+t0 = time.time()
 Nvar=2  # Z,A
 Npar2=0 #parameter of correction
 Nres=1  #the result
@@ -22,6 +24,8 @@ Nres=1  #the result
 dataset = np.loadtxt(fname = "HalfLifeForecast.dat")
 error = dataset[:,dataset.shape[1]-1]
 dataset = dataset[:,:dataset.shape[1]-1]
+dataset[:,dataset.shape[1]-2:] = np.log10(dataset[:,dataset.shape[1]-2:])
+
 
 #Architecture parameters
 param_code = str(sys.argv[1])
@@ -58,11 +62,15 @@ for fold in range(k):
     database = np.copy( np.concatenate((dataset[:nb_data_eval * fold,:],
                               dataset[nb_data_eval * (fold + 1):,:]),axis=0))
     
-    database[:,database.shape[1]-2:] = np.log10(database[:,database.shape[1]-2:])
-    database_eval[:,database_eval.shape[1]-2:] = np.log10(database_eval[:,database_eval.shape[1]-2:])
-
-
-
+    
+    database[:,database.shape[1]-2] = database[:,database.shape[1]-1] - database[:,database.shape[1]-2]
+    database = database[:,:database.shape[1]-1]
+    
+    Calc_eval = np.copy(database_eval[:,database_eval.shape[1]-2:database_eval.shape[1]-1])
+    Exp_eval = np.copy(database_eval[:,database_eval.shape[1]-1:database_eval.shape[1]])
+    database_eval[:,database_eval.shape[1]-2] = database_eval[:,database_eval.shape[1]-1] - database_eval[:,database_eval.shape[1]-2]
+    database_eval = database_eval[:,:database_eval.shape[1]-1]
+    
     #Decrypte param_code
     if(param_code == "1000"):
         param = database[:,2].reshape(database[:,2].shape[0],1)
@@ -106,7 +114,7 @@ for fold in range(k):
         Npar1=2  #Sp,Qbet
     elif ( param_code == "1110"):
         param = database[:,2:5]
-        param_eval = database[:,2:5]
+        param_eval = database_eval[:,2:5]
         Npar1=3  #bet2,Sn,Sp
     elif ( param_code == "1101"):
         param = np.concatenate((database[:,2:4],database[:,5].reshape(database[:,5].shape[0],1)),axis=1)
@@ -127,8 +135,8 @@ for fold in range(k):
 
 
     #choose parameters to help the network
-    database = np.concatenate((database[:,:2],param,database[:,6:8]), axis=1 )
-    database_eval = np.concatenate((database_eval[:,:2],param_eval,database_eval[:,6:8]),axis=1 )
+    database = np.concatenate((database[:,:2],param,database[:,6:7]), axis=1 )
+    database_eval = np.concatenate((database_eval[:,:2],param_eval,database_eval[:,6:7]),axis=1 )
 
 
 
@@ -159,8 +167,8 @@ for fold in range(k):
     #nnet.plotTrainningHistory(successive_fit_numb)
     
     #Performances
-    validation_score = nnet.model.evaluate(nnet.x_eval,nnet.y_eval,verbose =0)
-    validation_scores.append(math.sqrt(validation_score[0]))
+    sigma = nnet.model.predict(nnet.x_eval,verbose =0)
+    validation_scores.append(math.sqrt(sum((Calc_eval + sigma - Exp_eval )**2)/sigma.shape[0]))
     
     #Plot performances
     key = list(nnet.trainModel_history[0].history.keys())
@@ -184,6 +192,7 @@ else:
 fichier.write(param_code + " " + str(arch) + " " + str(validation_score) + "\n")
 fichier.close()
 
+print(time.time() - t0)
 
 
 
