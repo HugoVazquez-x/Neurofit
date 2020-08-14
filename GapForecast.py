@@ -21,11 +21,16 @@ Npar2=0 #parameter of correction
 Nres=1  #the result
 
 #Read input data
-dataset = np.loadtxt(fname = "HalfLifeForecast.dat")
+dataset = np.loadtxt(fname = "HalfLifeForecast_inf1000.dat")
 error = dataset[:,dataset.shape[1]-1]
 dataset = dataset[:,:dataset.shape[1]-1]
 dataset[:,dataset.shape[1]-2:] = np.log10(dataset[:,dataset.shape[1]-2:])
+np.random.shuffle(dataset)
 
+    
+Calc = np.copy(dataset[:,dataset.shape[1]-2:dataset.shape[1]-1])
+Exp = np.copy(dataset[:,dataset.shape[1]-1:dataset.shape[1]])
+print(math.sqrt(sum((Calc- Exp )**2)/Calc.shape[0]))
 
 #Architecture parameters
 param_code = str(sys.argv[1])
@@ -35,7 +40,7 @@ for i in range(3,len(sys.argv)):
     arch.append(int(sys.argv[i]))
 
 #Split the dataset  into K-fold validation (data_train and data_eval)
-k = 3
+k = 4
 nb_data_eval = math.ceil(dataset.shape[0]*(1/k))
 nb_data_train = dataset.shape[0] - nb_data_eval
 
