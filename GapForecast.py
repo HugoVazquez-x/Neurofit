@@ -21,7 +21,7 @@ Npar2=0 #parameter of correction
 Nres=1  #the result
 
 #Read input data
-dataset = np.loadtxt(fname = "HalfLifeForecast_inf1000.dat")
+dataset = np.loadtxt(fname = "HalfLifeForecast_inf1000_3.dat")
 error = dataset[:,dataset.shape[1]-1]
 dataset = dataset[:,:dataset.shape[1]-1]
 dataset[:,dataset.shape[1]-2:] = np.log10(dataset[:,dataset.shape[1]-2:])
@@ -104,72 +104,72 @@ for fold in range(k):
         param = database[:,3].reshape(database[:,3].shape[0],1)
         param_eval = database_eval[:,3].reshape(database_eval[:,3].shape[0],1)
         param_test = test_set[:,3].reshape(test_set[:,3].shape[0],1)
-        Npar1=1  #Sn
+        Npar1=1  #Qbet
     elif (param_code == "0010") : 
         param = database[:,4].reshape(database[:,4].shape[0],1)
         param_eval = database_eval[:,4].reshape(database_eval[:,4].shape[0],1)
         param_test = test_set[:,4].reshape(test_set[:,4].shape[0],1)
-        Npar1=1  #Sp
+        Npar1=1  #Jth
     elif ( param_code == "0001") :
         param = database[:,5].reshape(database[:,5].shape[0],1)
         param_eval = database_eval[:,5].reshape(database_eval[:,5].shape[0],1)
         param_test = test_set[:,5].reshape(test_set[:,5].shape[0],1)
-        Npar1=1  #Qbet
+        Npar1=1  #Pth
     elif (param_code == "1100" ):
         param = database[:,2:4]
         param_eval = database_eval[:,2:4]
         param_test = test_set[:,2:4]
-        Npar1=2  #bet2,Sn
+        Npar1=2  #bet2,Qbet
     elif (param_code == "1010" ):
         param = np.concatenate((database[:,2].reshape(database[:,2].shape[0],1),database[:,4].reshape(database[:,4].shape[0],1)),axis=1)
         param_eval = np.concatenate((database_eval[:,2].reshape(database_eval[:,2].shape[0],1),database_eval[:,4].reshape(database_eval[:,4].shape[0],1)),axis=1)
         param_test = np.concatenate((test_set[:,2].reshape(test_set[:,2].shape[0],1),test_set[:,4].reshape(test_set[:,4].shape[0],1)),axis=1)
-        Npar1=2  #bet2,Sp
+        Npar1=2  #bet2,Jth
     elif (param_code == "1001") :
         param = np.concatenate((database[:,2].reshape(database[:,2].shape[0],1),database[:,5].reshape(database[:,4].shape[0],1)),axis=1)
         param_eval = np.concatenate((database_eval[:,2].reshape(database_eval[:,2].shape[0],1),database_eval[:,5].reshape(database_eval[:,4].shape[0],1)),axis=1)
         param_test = np.concatenate((test_set[:,2].reshape(test_set[:,2].shape[0],1),test_set[:,5].reshape(test_set[:,4].shape[0],1)),axis=1)
-        Npar1=2  #bet2,Qbet
+        Npar1=2  #bet2,Pth
     elif ( param_code == "0110"):
         param = database[:,3:5]
         param_eval = database_eval[:,3:5]
         param_test = test_set[:,3:5]
-        Npar1=2  #Sn,Sp
+        Npar1=2  #Qbet,Jth
     elif (param_code == "0101"):
         param = np.concatenate((database[:,3].reshape(database[:,3].shape[0],1),database[:,5].reshape(database[:,4].shape[0],1)),axis=1)
         param_eval = np.concatenate((database_eval[:,3].reshape(database_eval[:,3].shape[0],1),database_eval[:,5].reshape(database_eval[:,4].shape[0],1)),axis=1)
         param_test = np.concatenate((test_set[:,3].reshape(test_set[:,3].shape[0],1),test_set[:,5].reshape(test_set[:,4].shape[0],1)),axis=1)
-        Npar1=2  #Sn,Qbet
+        Npar1=2  #SQbet,Pth
     elif ( param_code == "0011"):
         param = database[:,4:6]
         param_eval = database_eval[:,4:6]
         param_test = test_set[:,4:6]
-        Npar1=2  #Sp,Qbet
+        Npar1=2  #Jth,Pth
     elif ( param_code == "1110"):
         param = database[:,2:5]
         param_eval = database_eval[:,2:5]
         param_test = test_set[:,2:5]
-        Npar1=3  #bet2,Sn,Sp
+        Npar1=3  #bet2,Qbet,Jth
     elif ( param_code == "1101"):
         param = np.concatenate((database[:,2:4],database[:,5].reshape(database[:,5].shape[0],1)),axis=1)
         param_eval = np.concatenate((database_eval[:,2:4],database_eval[:,5].reshape(database_eval[:,5].shape[0],1)),axis=1)
         param_test = np.concatenate((test_set[:,2:4],test_set[:,5].reshape(test_set[:,5].shape[0],1)),axis=1)
-        Npar1=3  #bet2,Sn,Qbet
+        Npar1=3  #bet2,Qbet,Pth
     elif ( param_code == "0111"):
         param = database[:,3:6]
         param_eval = database_eval[:,3:6]
         param_test = test_set[:,3:6]
-        Npar1=3  #Sn,Sp,Qbet
+        Npar1=3  #Qbet,Jth,Pth
     elif (param_code == "1011"):
         param = np.concatenate((database[:,2].reshape(database[:,2].shape[0],1),database[:,4:6]),axis=1)
         param_eval = np.concatenate((database_eval[:,2].reshape(database_eval[:,2].shape[0],1),database_eval[:,4:6]),axis=1)
         param_test = np.concatenate((test_set[:,2].reshape(test_set[:,2].shape[0],1),test_set[:,4:6]),axis=1)
-        Npar1=3  #bet2,Sp,Qbet
+        Npar1=3  #bet2,Jth,Pth
     elif (param_code == "1111"):
         param = database[:,2:6]
         param_eval = database_eval[:,2:6]
         param_test = test_set[:,2:6]
-        Npar1=4  #bet2,Sn,Sp,Qbet
+        Npar1=4  #bet2,Qbet,Jth,Pth
 
 
     #choose parameters to help the network
