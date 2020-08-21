@@ -21,7 +21,7 @@ Npar2=0 #parameter of correction
 Nres=1  #the result
 
 #Read input data
-dataset = np.loadtxt(fname = "HalfLifeForecast_inf1000_3.dat")
+dataset = np.loadtxt(fname = "HalfLifeForecast_inf1000_4.dat")
 error = dataset[:,dataset.shape[1]-1]
 dataset = dataset[:,:dataset.shape[1]-1]
 dataset[:,dataset.shape[1]-2:] = np.log10(dataset[:,dataset.shape[1]-2:])
