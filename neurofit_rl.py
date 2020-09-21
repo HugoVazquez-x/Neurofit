@@ -20,7 +20,7 @@ def neurofit(database, database_eval, Nvar, Npar1, Npar2, Nres, bornes, list_pts
     architecture = arch
     act_func = 'relu'
     successive_fit_numb = 1
-    epoch = [2000]
+    epoch = [1000]
     batch = [10]
 
     #Force Keras to work with 'float64'
@@ -55,8 +55,8 @@ def neurofit(database, database_eval, Nvar, Npar1, Npar2, Nres, bornes, list_pts
     ##Nine minizations from random initial guess
     for i in range(9):
         pred = emul.minimizing(mode = 'random')
-        if (x_in_y(pred,Pred) == False):
-            Pred.append(pred)
+        #if (x_in_y(pred,Pred) == False):
+        Pred.append(pred)
     Pred = np.array(Pred)
 
     #Writing the results on two different files

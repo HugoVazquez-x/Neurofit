@@ -19,13 +19,13 @@ a=2
 b=1
 c=3
 
-list_pts = np.arange( -5, 5, 0.5 )
+list_pts = np.arange( -5, 5, 0.5 ).reshape((20,1))
 
 
 # Make of simulated experimental data
 exp_values = np.zeros(( list_pts.shape[0], 2 ))
 
-exp_values[:,0] = list_pts
+exp_values[:,0] = list_pts.reshape((20,))
 
 for i in range(exp_values.shape[0]):
 	exp_values[i,1] =  fct( exp_values[i,0], a ,b,c)

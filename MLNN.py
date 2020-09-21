@@ -257,16 +257,17 @@ class MLNN(Minimize):
         data = self.getDataset(param)
 
         #Predictions
-        y_pred = self.getPrediction(data)
-
+        y_pred = self.getPrediction(data)+ self.exp_values[:,1]
+        
         #Plot result
         plt.figure(figsize = (10,10))
-        x = self.exp_values[:,0] + self.exp_values[:,1]
+        x = self.exp_values[:,0] 
         #y = [self.fct(t,2,1,3) for t in x]
-        plt.scatter(x,y_pred,marker = "+",c = 'b',label = 'Estimate function\n' + str(param))
-        #plt.scatter(x,np.log(self.exp_values[:,2]),marker = 'x', c='r',label = 'Experimental measurement')
-        plt.xlabel('A')
-        plt.ylabel('log10(y_pred/y_exp)')
+        plt.scatter(x,y_pred,marker = "+",c = 'b',label = 'Fonction Estimée \n' + str(param))
+        plt.scatter(x,self.exp_values[:,1],marker = 'x', c='r',label = 'Mesures expérimentales')
+        plt.plot(x,2*x+1,c='g',label = 'Fonction recherchée')
+        plt.xlabel('x')
+        plt.ylabel('y_pred-y')
         plt.legend()
         plt.savefig("ModelPredHistory/step{:d}.png".format(self.step ))
         plt.show()

@@ -19,13 +19,13 @@ def fct(x,a,b):
 a=2
 b=1
 
-list_pts = np.arange( -5, 5, 0.5 )
+list_pts = np.arange( -5, 5, 0.5 ).reshape((20,1))
 
 
 # Make of simulated experimental data
 exp_values = np.zeros(( list_pts.shape[0], 2 ))
 
-exp_values[:,0] = list_pts
+exp_values[:,0] = list_pts.reshape((20,))
 
 for i in range(exp_values.shape[0]):
 	exp_values[i,1] =  fct( exp_values[i,0], a ,b)
@@ -136,7 +136,7 @@ def additional_param(param_list):
 
 
 # start the fitting procedure with neurofit
-Nstep= 5
+Nstep= 10
 for istep in range( Nstep ):
     print("-----------START OF STEP %2d-----------------------------" % istep)
     
@@ -156,10 +156,13 @@ for istep in range( Nstep ):
         next_line  = np.zeros( ( 1, Nvar + Npar1 + Npar2 + Nres ) )
         next_line[0,0] = x
         next_line[0,Nres:Nvar + Npar1 ] = pred[nb_pred][0:Npar1]
-        #result
+        
+        #Use Physical Code to compute new values
         next_line[0,Nvar + Npar1 ] = fct(x,a,b) - exp_values[j,1]
+        
         #Add all the predictions in database for next training step
         database = np.concatenate(( database , next_line  ),axis=0)
+        
         #Add the first prediction (which is suppose to be the best prediction) 
         #in the database_eval. Variable x is changed. 
         if(nb_pred == 0):
